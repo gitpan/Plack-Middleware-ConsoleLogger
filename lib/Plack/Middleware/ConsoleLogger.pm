@@ -4,7 +4,7 @@ use parent qw(Plack::Middleware);
 use Plack::Util::Accessor qw(group);
 
 use 5.008001;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use JavaScript::Value::Escape;
 
@@ -42,6 +42,8 @@ sub generate_js {
         my $level = $self->_validate_level($log->{level});
         $level = "error" if $level eq 'fatal';
         my $message = javascript_value_escape($log->{message});
+        $message =~ s/([^\x00-\xff])/sprintf "\\u%04x", ord($1)/eg;
+        utf8::downgrade($message);
         $js .= qq/console.$level("$message");/;
     }
 
